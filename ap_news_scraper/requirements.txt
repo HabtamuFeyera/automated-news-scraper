@@ -1,2 +1,0 @@
-rpaframework==10.5.0
-pandas==1.4.0
