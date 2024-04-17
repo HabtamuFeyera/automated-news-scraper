@@ -1,13 +1,6 @@
 tasks:
-  - name: scrape_news
-    image: 'python:3'
-    command:
-      - 'pip install requests beautifulsoup4 openpyxl'
-      - 'python -u scripts/news_scraper.py'
-    environment:
-      SEARCH_PHRASE: '${WORKITEMS__search_phrase}'
-      NEWS_CATEGORY: '${WORKITEMS__news_category}'
-      NUM_MONTHS: '${WORKITEMS__num_months}'
+  Scrape News:
+    shell: python -m robocorp.tasks run tasks.py #scrape_news --search-phrase "COVID-19" --news-category "World News" --num-months 3
 
 environmentConfigs:
   - environment_windows_amd64_freeze.yaml

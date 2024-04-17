@@ -1,11 +1,18 @@
+import os
+import re
+import logging
+from datetime import datetime, timedelta
+from time import sleep
+import openpyxl
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
-import openpyxl
-import re
-import os
-import logging
-from time import sleep
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from RPA.Browser.Selenium import Selenium
+from RPA.HTTP import HTTP
+from RPA.Robocorp.WorkItems import WorkItems
 
 class NewsScraper:
     def __init__(self, search_phrase, category, num_months):
@@ -21,6 +28,7 @@ class NewsScraper:
         self.wb = openpyxl.Workbook()
         self.ws = self.wb.active
         self.ws.append(["Title", "Date", "Description", "Picture Filename", "Search Phrase Count", "Contains Money"])
+        self.browser = Selenium()
 
     def get_month_range(self):
         today = datetime.today()
@@ -42,7 +50,7 @@ class NewsScraper:
                 self.logger.info(f"Scraping news for {month}:")
                 for headline in headlines:
                     if self.search_phrase.lower() in headline.text.lower() and self.category.lower() in url.lower():
-                        news_url = f"https://apnews.com{headline.find('a')['href']}"
+                        news_url = f"https://apnews.com/{headline.find('a')['href']}"
                         news_response = self.get_response(news_url)
                         if news_response:
                             news_soup = BeautifulSoup(news_response.text, 'html.parser')
@@ -74,7 +82,7 @@ class NewsScraper:
         self.wb.save("news_data.xlsx")
 
     def get_response(self, url):
-        retries = 3
+        retries = 1
         for _ in range(retries):
             try:
                 response = requests.get(url)
@@ -87,14 +95,13 @@ class NewsScraper:
             sleep(2)  # Wait for 2 seconds before retrying
         return None
 
-def main():
-    # Fetch parameters from Robocloud Work Items
-    search_phrase = os.getenv("SEARCH_PHRASE")
-    category = os.getenv("NEWS_CATEGORY")
-    num_months = int(os.getenv("NUM_MONTHS"))
-    
-    scraper = NewsScraper(search_phrase, category, num_months)
-    scraper.scrape_news()
+    def close_browser(self):
+        self.browser.close_browser()
 
-if __name__ == "__main__":
-    main()
+
+def scrape_news(search_phrase: str, news_category: str, num_months: int):
+    scraper = NewsScraper(search_phrase, news_category, num_months)
+    scraper.scrape_news()
+    scraper.close_browser()
+
+scrape_news("science", "null", 1)
